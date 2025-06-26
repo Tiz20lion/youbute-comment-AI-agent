@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  youtube-comment-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tiz20lion/youbute-comment-ai-agent:latest
+    container_name: youtube-comment-ai-agent
+    ports:
+      - "8080:8080"
+    environment:
+      # Environment variables will be loaded from .env file
+      # Users need to create their own .env file based on example.env
+      - PYTHONPATH=/app
+      # Set startup mode: auto (default), interactive, or direct
+      - DOCKER_STARTUP_MODE=auto
+    env_file:
+      - .env  # User needs to create this file
+    volumes:
+      # Mount only necessary directories for persistence
+      - ./data:/app/data:rw          # Channel data persistence
+      - ./logs:/app/logs:rw          # Log file persistence  
+      - ./temp:/app/temp:rw          # Temporary workflow files
+      - ./.env:/app/.env:ro          # Mount .env file for configuration
+    restart: unless-stopped
+    # For interactive startup UI, uncomment the lines below and run:
+    # docker-compose run --rm -it youtube-comment-ai
+    # stdin_open: true
+    # tty: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - youtube-ai-network
+
+  # Optional: Add a monitoring container (uncomment if needed)
+  # portainer:
+  #   image: portainer/portainer-ce:latest
+  #   container_name: portainer
+  #   ports:
+  #     - "9000:9000"
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - portainer_data:/data
+  #   restart: unless-stopped
+  #   networks:
+  #     - youtube-ai-network
+
+networks:
+  youtube-ai-network:
+    driver: bridge
+
+# Uncomment if using Portainer
+# volumes:
+#   portainer_data: 

@@ -1,0 +1,198 @@
+# Based on .gitignore patterns - Exclude sensitive files and folders from Docker build
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff
+*.log
+local_settings.py
+db.sqlite3
+
+# Flask stuff
+instance/
+.webassets-cache
+
+# Scrapy stuff
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
+
+# SageMath parsed files
+*.sage.py
+
+# Environments - CRITICAL: Exclude actual environment files
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# PROJECT SPECIFIC - SENSITIVE DATA
+# Logs and temporary files
+logs/
+*.log
+temp/
+*.tmp
+
+# Data directories - Contains channel data and user information
+data/
+data/channels/
+data/channels/*/
+
+# Virtual environment
+venv/
+.venv/
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.sublime-*
+.cursor/
+
+# System files
+.DS_Store
+*.swp
+*.swo
+
+# JSON files (workflow and temp data) - May contain sensitive info
+*.json
+!package.json
+!tsconfig.json
+
+# API Keys and Secrets - CRITICAL
+credentials.json
+token.json
+youtube_credentials.pickle
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Docker files (prevent recursion)
+Dockerfile*
+.dockerignore
+
+# Documentation and media files
+README.md
+*.md
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+
+# Screenshots and demo files
+Screenshot*.png
+file_*.png
+
+# Environment files (will be mounted)
+.env.local
+.env.prod
+
+# Docker files (except the ones we need)
+docker-compose.yml
+docker-build.sh
+docker-build.bat
+
+# Screenshots and images (except logo)
+image.png
+
+# Backup files
+*.backup
+*.bak
+
+# Node modules (if any)
+node_modules/
+
+# Test files
+test/
+tests/
+*.test.py
+
+# Exclude sensitive files and folders from Docker build
+!docker-hub-readme.md 
