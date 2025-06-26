@@ -235,16 +235,22 @@ if not install_essential_deps():
 # Import libraries with comprehensive fallback handling
 try:
     from colorama import init, Fore, Back, Style
-    init(autoreset=True, convert=True, strip=False)
     
-    # Enhanced Windows terminal support
+    # Platform-specific colorama initialization
     if IS_WINDOWS:
+        # Windows needs ANSI conversion
+        init(autoreset=True, convert=True, strip=False)
+        
+        # Enhanced Windows terminal support
         try:
             import ctypes
             kernel32 = ctypes.windll.kernel32
             kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
         except Exception:
             pass  # Fallback to colorama conversion
+    else:
+        # Linux/macOS - disable conversion to prevent colorama conflicts
+        init(autoreset=True, convert=False, strip=False)
     
     print(f"{Fore.GREEN}✅ Colorama initialized with full color support{Style.RESET_ALL}")
     HAS_COLORAMA = True
@@ -285,12 +291,14 @@ def try_rich_imports() -> bool:
         from rich.progress import Progress as RichProgress, SpinnerColumn, TextColumn
         from rich.table import Table as RichTable
         
-        # Create console with enhanced settings
+        # Create console with enhanced settings for Linux compatibility
         console = Console(
             force_terminal=True,
-            color_system="auto" if HAS_COLORAMA else None,
+            color_system="auto",
             width=None,
-            legacy_windows=IS_WINDOWS
+            legacy_windows=IS_WINDOWS,
+            # Disable features that might conflict with colorama on Linux
+            force_interactive=False if IS_LINUX else None
         )
         
         # Set global references
@@ -304,6 +312,10 @@ def try_rich_imports() -> bool:
         
     except ImportError as e:
         print(f"⚠️ Rich import failed: {e}")
+        return False
+    except Exception as e:
+        print(f"⚠️ Rich initialization failed: {e}")
+        print("🔄 Falling back to basic console...")
         return False
 
 # Try to initialize Rich
@@ -416,9 +428,33 @@ if not try_rich_imports():
     console = FallbackConsole()
     Panel = FallbackPanel
     Table = FallbackTable
-    Progress = SpinnerColumn = TextColumn = None
+    
+    # Add fallback Progress components to prevent errors
+    class FallbackProgress:
+        def __init__(self, *args, **kwargs):
+            pass
+            
+        def __enter__(self):
+            return self
+            
+        def __exit__(self, *args):
+            pass
+            
+        def add_task(self, description, total=None):
+            print(f"⏳ {description}")
+            return "task_id"
+    
+    class FallbackSpinnerColumn:
+        pass
+        
+    class FallbackTextColumn:
+        pass
+    
+    Progress = FallbackProgress
+    SpinnerColumn = FallbackSpinnerColumn
+    TextColumn = FallbackTextColumn
     HAS_RICH = False
-    print("⚠️ Running with enhanced fallback UI")
+    print("⚠️ Running with enhanced fallback UI (includes Progress fallback)")
 
 print(f"{Fore.CYAN}🎨 Display system initialized!{Style.RESET_ALL}")
 print(f"   Color Support: {'✅ Yes' if HAS_COLORAMA else '❌ No'}")
