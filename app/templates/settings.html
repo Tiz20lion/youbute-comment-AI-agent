@@ -1,0 +1,1321 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .status-indicator { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-valid { background-color: #10b981; }
+        .status-placeholder { background-color: #f59e0b; }
+        .status-invalid { background-color: #ef4444; }
+        .status-empty { background-color: #6b7280; }
+        
+        /* Menu animations */
+        .menu-show {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: translateY(0) !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <!-- Clean Mobile-First Header -->
+    <header class="bg-gray-900/80 backdrop-blur-sm border-b border-gray-700/50 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <!-- Main Header Row -->
+            <div class="flex justify-between items-center h-14 sm:h-16">
+                <!-- Left Side - Brand (Simplified) -->
+                <div class="flex items-center space-x-3">
+                    <div class="relative">
+                        <img src="/static/favicon.ico" alt="TizlionAI" class="w-6 h-6 sm:w-7 sm:h-7">
+                        <div class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-blue-500 rounded-full border border-gray-900"></div>
+                    </div>
+                    <div class="flex flex-col">
+                        <h1 class="text-base sm:text-lg font-semibold text-white">Settings</h1>
+                        <p class="text-xs text-gray-400 leading-none hidden sm:block">API Keys & Configuration</p>
+                    </div>
+                </div>
+
+                <!-- Right Side - Navigation -->
+                <div class="flex items-center space-x-2">
+                    <!-- Dashboard Button (Always Visible) -->
+                    <a href="/dashboard" 
+                       class="flex items-center space-x-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 border border-blue-500 hover:border-blue-400 rounded-lg transition-all duration-200" 
+                       title="Back to Dashboard">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        <span class="text-white text-sm font-medium hidden sm:inline">Dashboard</span>
+                        <span class="text-white text-sm font-medium sm:hidden">Home</span>
+                    </a>
+
+                    <!-- Actions Menu Button -->
+                    <div class="relative">
+                        <button id="actionsMenuBtn" 
+                                onclick="toggleActionsMenu()" 
+                                class="flex items-center justify-center w-10 h-10 bg-gray-700 hover:bg-gray-600 border border-gray-600 hover:border-gray-500 rounded-lg transition-all duration-200"
+                                title="More Actions">
+                            <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div id="actionsMenu" 
+                             class="absolute right-0 top-12 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-xl opacity-0 invisible transition-all duration-200 transform translate-y-1">
+                            <!-- Menu Header -->
+                            <div class="px-4 py-3 border-b border-gray-700">
+                                <h3 class="text-sm font-medium text-white">Quick Actions</h3>
+                                <p class="text-xs text-gray-400">Settings & Navigation</p>
+                            </div>
+
+                            <!-- Menu Items -->
+                            <div class="py-2">
+                                <!-- Save Status -->
+                                <div class="px-4 py-2 text-xs text-gray-400 border-b border-gray-700/50">
+                                    <div class="flex items-center space-x-2">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <span id="saveStatus">Ready to configure</span>
+                                    </div>
+                                </div>
+
+                                <!-- Refresh Button -->
+                                <button onclick="refreshSettings(); closeActionsMenu()" 
+                                        class="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-700/50 transition-colors">
+                                    <div class="flex items-center justify-center w-8 h-8 bg-green-600 rounded-lg">
+                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-medium text-white">Refresh Status</div>
+                                        <div class="text-xs text-gray-400">Update all indicators</div>
+                                    </div>
+                                </button>
+
+                                <!-- Metrics Button -->
+                                <a href="/metrics" 
+                                   class="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-700/50 transition-colors">
+                                    <div class="flex items-center justify-center w-8 h-8 bg-purple-600 rounded-lg">
+                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-medium text-white">Analytics</div>
+                                        <div class="text-xs text-gray-400">View metrics & performance</div>
+                                    </div>
+                                </a>
+
+                                <!-- Configuration Status -->
+                                <div class="px-4 py-3 border-t border-gray-700/50">
+                                    <div class="flex items-center space-x-2 px-2 py-1 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                                        <svg class="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        </svg>
+                                        <span class="text-xs text-blue-400 font-medium">Configuration Mode</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Settings Grid - Minimal Mobile-First Design -->
+        <div class="space-y-6">
+            <!-- API Keys Section - Compact & Clean -->
+            <div class="bg-gray-800/50 backdrop-blur border border-gray-700/50 rounded-xl overflow-hidden">
+                <!-- Header -->
+                <div class="flex items-center justify-between p-4 border-b border-gray-700/50">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m0 0a2 2 0 012 2m-2-2v6m0 0V9a2 2 0 00-2-2M9 7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V9a2 2 0 00-2-2"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">API Keys</h3>
+                            <p class="text-xs text-gray-400">Configure service credentials</p>
+                        </div>
+                    </div>
+                    <button onclick="toggleApiKeysSection()" id="apiKeysToggle" 
+                            class="p-2 hover:bg-gray-700/50 rounded-lg transition-colors">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Collapsible Content -->
+                <div id="apiKeysContent" class="p-4 space-y-4">
+                    <!-- OpenRouter API Key -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-sm font-medium text-gray-200 flex items-center space-x-2">
+                                <span>OpenRouter API</span>
+                                <button onclick="showApiHelp('openrouter')" class="text-gray-400 hover:text-gray-200">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </button>
+                            </label>
+                            <span id="openrouterStatus" class="text-xs"></span>
+                        </div>
+                        <input type="password" id="openrouterKey" placeholder="sk-or-..." 
+                               class="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all">
+                    </div>
+
+                    <!-- YouTube API Key -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-sm font-medium text-gray-200 flex items-center space-x-2">
+                                <span>YouTube API</span>
+                                <button onclick="showApiHelp('youtube')" class="text-gray-400 hover:text-gray-200">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </button>
+                            </label>
+                            <span id="youtubeStatus" class="text-xs"></span>
+                        </div>
+                        <input type="password" id="youtubeKey" placeholder="AIza..." 
+                               class="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all">
+                    </div>
+
+                    <!-- Google OAuth2 Credentials -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-sm font-medium text-gray-200 flex items-center space-x-2">
+                                <span>Google OAuth2</span>
+                                <button onclick="showApiHelp('oauth2')" class="text-gray-400 hover:text-gray-200">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </button>
+                            </label>
+                            <span id="oauthStatus" class="text-xs"></span>
+                        </div>
+                        <div class="space-y-2">
+                            <input type="password" id="googleClientId" placeholder="Client ID" 
+                                   class="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all">
+                            <input type="password" id="googleClientSecret" placeholder="Client Secret" 
+                                   class="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all">
+                        </div>
+                    </div>
+
+                    <!-- Update Button -->
+                    <button onclick="updateAPIKeys()" 
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors text-sm">
+                        Update API Keys
+                    </button>
+                </div>
+            </div>
+
+            <!-- Telegram Settings Section - Minimal Design -->
+            <div class="bg-gray-800/50 backdrop-blur border border-gray-700/50 rounded-xl overflow-hidden">
+                <!-- Header -->
+                <div class="flex items-center justify-between p-4 border-b border-gray-700/50">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Telegram Bot</h3>
+                            <p class="text-xs text-gray-400">Bot integration settings</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <div id="telegramStatusBadge" class="flex items-center space-x-2 px-2 py-1 rounded-full text-xs font-medium">
+                            <span class="w-2 h-2 rounded-full" id="telegramStatusDot"></span>
+                            <span id="telegramStatusText">Not Configured</span>
+                        </div>
+                        <button onclick="toggleTelegramSection()" id="telegramToggle" 
+                                class="p-2 hover:bg-gray-700/50 rounded-lg transition-colors">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Collapsible Content -->
+                <div id="telegramContent" class="p-4 space-y-4">
+                    <!-- Bot Token -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-sm font-medium text-gray-200 flex items-center space-x-2">
+                                <span>Bot Token</span>
+                                <button onclick="showApiHelp('telegram')" class="text-gray-400 hover:text-gray-200">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </button>
+                            </label>
+                        </div>
+                        <div class="relative">
+                            <input type="password" id="telegramToken" 
+                                   placeholder="Bot token from @BotFather" 
+                                   oninput="validateTelegramToken()"
+                                   class="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-3 py-2 pr-10 text-sm font-mono focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all">
+                            <button type="button" onclick="togglePasswordVisibility('telegramToken')" 
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200">
+                                <svg id="telegramTokenEye" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="telegramTokenValidation" class="hidden transition-all duration-300"></div>
+                    </div>
+
+                    <!-- User IDs -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-sm font-medium text-gray-200 flex items-center space-x-2">
+                                <span>Allowed Users</span>
+                                <button onclick="showApiHelp('telegram_users')" class="text-gray-400 hover:text-gray-200">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </button>
+                            </label>
+                        </div>
+                        <input type="text" id="allowedUserIds" 
+                               placeholder="123456789, 987654321" 
+                               oninput="validateUserIds()"
+                               class="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all">
+                        <div id="userIdsValidation" class="hidden transition-all duration-300"></div>
+                    </div>
+
+                    <!-- Update Button -->
+                    <button onclick="updateTelegramSettings()" 
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors text-sm">
+                        Update Telegram Settings
+                    </button>
+                </div>
+            </div>
+
+            <!-- YouTube Authentication Section - Minimal Design -->
+            <div class="bg-gray-800/50 backdrop-blur border border-gray-700/50 rounded-xl overflow-hidden lg:col-span-2">
+                <!-- Header -->
+                <div class="flex items-center justify-between p-4 border-b border-gray-700/50">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">YouTube Authentication</h3>
+                            <p class="text-xs text-gray-400">OAuth2 connection for posting comments</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <div id="oauth2StatusBadge" class="flex items-center space-x-2 px-2 py-1 rounded-full text-xs font-medium"></div>
+                        <button onclick="toggleOAuthSection()" id="oauthToggle" 
+                                class="p-2 hover:bg-gray-700/50 rounded-lg transition-colors">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Collapsible Content -->
+                <div id="oauthContent" class="p-4 space-y-4">
+                    <!-- Status Card -->
+                    <div id="oauth2StatusCard" class="p-4 rounded-lg border border-gray-600/50">
+                        <div class="flex items-center space-x-3">
+                            <div id="oauth2StatusIcon" class="w-10 h-10 rounded-full flex items-center justify-center">
+                                <!-- Icon populated by JavaScript -->
+                            </div>
+                            <div class="flex-1">
+                                <h4 id="oauth2StatusTitle" class="font-semibold text-base mb-1"></h4>
+                                <p id="oauth2StatusDescription" class="text-sm text-gray-400"></p>
+                                
+                                <!-- Connection Benefits -->
+                                <div id="oauth2Benefits" class="mt-2 space-y-1 hidden">
+                                    <div class="flex items-center text-xs text-gray-300">
+                                        <svg class="w-3 h-3 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        Post AI-generated comments
+                                    </div>
+                                    <div class="flex items-center text-xs text-gray-300">
+                                        <svg class="w-3 h-3 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        Secure OAuth2 authentication
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Button -->
+                    <button id="oauth2ActionButton" onclick="handleOAuth2Action()" 
+                            class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors text-sm flex items-center justify-center">
+                        <svg id="oauth2ActionIcon" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        <span id="oauth2ActionText">Connect YouTube Account</span>
+                    </button>
+                    
+                    <!-- Loading State -->
+                    <div id="oauth2LoadingIndicator" class="hidden">
+                        <div class="flex items-center justify-center text-gray-400 py-3">
+                            <svg class="animate-spin h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span id="oauth2LoadingText" class="text-sm text-gray-300">Starting OAuth2 flow...</span>
+                            <!-- Cancel button will be added here dynamically -->
+                        </div>
+                        <div class="text-xs text-gray-500 text-center mt-2">
+                            <span>💡 Complete the authorization in the popup window</span>
+                        </div>
+                    </div>
+
+                    <!-- Redirect URI Display -->
+                    <div class="bg-gray-700/50 rounded-lg p-3 border border-gray-600/50">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-sm font-medium text-gray-200">Redirect URI</label>
+                            <button onclick="copyRedirectURI()" id="copyRedirectButton"
+                                    class="text-gray-400 hover:text-gray-200 text-xs transition-colors flex items-center">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                                Copy
+                            </button>
+                        </div>
+                        <div class="p-2 bg-gray-900 rounded border font-mono text-xs text-green-300 break-all" id="redirectUriDisplay">
+                            http://localhost:7844/oauth2callback
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">
+                            Add this URL to your Google Console OAuth2 settings under "Authorized redirect URIs"
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="statusMessage" class="mt-8 hidden">
+            <!-- Status messages will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        // WebSocket for real-time updates
+        let socket = null;
+        
+        // Initialize WebSocket connection
+        function initWebSocket() {
+            socket = new WebSocket(`ws://${window.location.host}/ws`);
+            
+            socket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                if (data.type === 'settings_update' || data.type === 'oauth2_success') {
+                    showStatusMessage(data.message, 'success');
+                    loadSettings(); // Refresh settings
+                }
+            };
+            
+            socket.onerror = function(error) {
+                console.log('WebSocket error:', error);
+            };
+            
+            socket.onclose = function() {
+                console.log('WebSocket closed');
+                // Attempt to reconnect after 5 seconds
+                setTimeout(initWebSocket, 5000);
+            };
+        }
+        
+        // Global variables
+        let oauth2StatusCheckInterval = null;
+        
+        // Settings cache to reduce API calls
+        let settingsCache = {
+            data: null,
+            lastUpdated: 0,
+            cacheTimeout: 30000, // 30 seconds cache
+        };
+        
+        // Enhanced Load Settings with Caching and Reduced Polling
+        async function loadSettings(forceRefresh = false) {
+            try {
+                // Check cache first (unless force refresh)
+                const now = Date.now();
+                if (!forceRefresh && settingsCache.data && 
+                    (now - settingsCache.lastUpdated) < settingsCache.cacheTimeout) {
+                    
+                    console.log('🚀 Using cached settings (no API call)');
+                    
+                    // Use cached data
+                    window.lastLoadedSettings = settingsCache.data;
+                    updateUIWithSettings(settingsCache.data);
+                    return;
+                }
+                
+                console.log('📡 Fetching fresh settings from API');
+                const response = await fetch('/api/v1/settings');
+                const settings = await response.json();
+                
+                // Update cache
+                settingsCache.data = settings;
+                settingsCache.lastUpdated = now;
+                
+                // Store settings globally for other functions to access
+                window.lastLoadedSettings = settings;
+                
+                console.log('🔍 Debug: Settings loaded:', settings);
+                console.log('🔍 Debug: Token validation states:', settings.token_validation_states);
+                
+                updateUIWithSettings(settings);
+                
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                showStatusMessage('❌ Failed to load settings. Please try refreshing the page.', 'error');
+            }
+        }
+        
+        // Separate function to update UI with settings data
+        function updateUIWithSettings(settings) {
+            console.log('🔄 Updating UI with settings:', settings);
+            
+            if (!settings) {
+                console.warn('No settings data provided to updateUIWithSettings');
+                return;
+            }
+            
+            // Helper function to create masked value for display
+            function maskApiKey(key, prefix = '', visibleChars = 4) {
+                if (!key || key.length < visibleChars) return '';
+                return prefix + key.substring(0, visibleChars) + '****';
+            }
+            
+            // Helper function to update status display
+            function updateStatusDisplay(elementId, isValid) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    if (isValid) {
+                        element.innerHTML = '<span class="w-2 h-2 bg-green-400 rounded-full inline-block mr-1"></span><span class="text-green-400">✅ Valid</span>';
+                        element.className = 'text-xs text-green-400';
+                    } else {
+                        element.innerHTML = '<span class="w-2 h-2 bg-gray-400 rounded-full inline-block mr-1"></span><span class="text-gray-400">Not Set</span>';
+                        element.className = 'text-xs text-gray-400';
+                    }
+                }
+            }
+            
+            // Update API Keys section with values and status
+            if (settings.api_keys && settings.token_validation_states) {
+                // OpenRouter API Key
+                const openrouterInput = document.getElementById('openrouterKey');
+                const openrouterValid = settings.token_validation_states.openrouter_api_key === 'valid';
+                if (openrouterInput) {
+                    openrouterInput.value = openrouterValid ? maskApiKey(settings.api_keys.openrouter_api_key, 'sk-or-') : '';
+                    openrouterInput.placeholder = openrouterValid ? 'Currently configured (sk-or-****)' : 'sk-or-...';
+                }
+                updateStatusDisplay('openrouterStatus', openrouterValid);
+                
+                // YouTube API Key
+                const youtubeInput = document.getElementById('youtubeKey');
+                const youtubeValid = settings.token_validation_states.youtube_api_key === 'valid';
+                if (youtubeInput) {
+                    youtubeInput.value = youtubeValid ? maskApiKey(settings.api_keys.youtube_api_key, 'AIza') : '';
+                    youtubeInput.placeholder = youtubeValid ? 'Currently configured (AIza****)' : 'AIza...';
+                }
+                updateStatusDisplay('youtubeStatus', youtubeValid);
+                
+                // Google OAuth2 Credentials
+                const clientIdInput = document.getElementById('googleClientId');
+                const clientSecretInput = document.getElementById('googleClientSecret');
+                const clientIdValid = settings.token_validation_states.google_client_id === 'valid';
+                const clientSecretValid = settings.token_validation_states.google_client_secret === 'valid';
+                
+                if (clientIdInput) {
+                    clientIdInput.value = clientIdValid ? maskApiKey(settings.api_keys.google_client_id, '', 8) : '';
+                    clientIdInput.placeholder = clientIdValid ? 'Currently configured (Client ID)' : 'Client ID';
+                }
+                if (clientSecretInput) {
+                    clientSecretInput.value = clientSecretValid ? maskApiKey(settings.api_keys.google_client_secret, 'GOCSPX-') : '';
+                    clientSecretInput.placeholder = clientSecretValid ? 'Currently configured (Client Secret)' : 'Client Secret';
+                }
+                updateStatusDisplay('oauthStatus', clientIdValid && clientSecretValid);
+            }
+            
+            // Update Telegram section
+            if (settings.telegram_settings && settings.token_validation_states) {
+                const telegramTokenInput = document.getElementById('telegramToken');
+                const allowedUsersInput = document.getElementById('allowedUserIds');
+                const tokenValid = settings.token_validation_states.telegram_token === 'valid';
+                const usersValid = settings.telegram_settings.allowed_user_ids && settings.telegram_settings.allowed_user_ids.trim() !== '';
+                
+                if (telegramTokenInput) {
+                    telegramTokenInput.value = tokenValid ? maskApiKey(settings.telegram_settings.bot_token, '', 10) : '';
+                    telegramTokenInput.placeholder = tokenValid ? 'Currently configured (Bot Token)' : 'Bot token from @BotFather';
+                }
+                
+                if (allowedUsersInput) {
+                    allowedUsersInput.value = settings.telegram_settings.allowed_user_ids || '';
+                }
+                
+                // Update Telegram status badge
+                const statusBadge = document.getElementById('telegramStatusBadge');
+                const statusDot = document.getElementById('telegramStatusDot');
+                const statusText = document.getElementById('telegramStatusText');
+                
+                if (tokenValid && usersValid) {
+                    if (statusBadge) statusBadge.className = 'flex items-center space-x-2 px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30';
+                    if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-green-400';
+                    if (statusText) statusText.textContent = 'Connected';
+                } else {
+                    if (statusBadge) statusBadge.className = 'flex items-center space-x-2 px-2 py-1 rounded-full text-xs font-medium bg-gray-600/20 text-gray-400 border border-gray-600/30';
+                    if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-gray-400';
+                    if (statusText) statusText.textContent = 'Not Configured';
+                }
+            }
+            
+            // Update OAuth2 status details
+            if (settings.oauth2_status) {
+                updateOAuth2StatusDetails(settings.oauth2_status.authenticated);
+            }
+            
+            // Update configuration status if available
+            if (settings.configuration_status) {
+                console.log('📊 Configuration status:', settings.configuration_status);
+            }
+            
+            // Store settings globally for other functions
+            window.lastLoadedSettings = settings;
+        }
+        
+        // Handle OAuth2 action button click - Enhanced with Disconnect/Reconnect Support
+        function handleOAuth2Action() {
+            // Check current authentication status from last loaded settings
+            const isCurrentlyAuthenticated = window.lastLoadedSettings && 
+                                           window.lastLoadedSettings.oauth2_status && 
+                                           window.lastLoadedSettings.oauth2_status.authenticated;
+            
+            if (isCurrentlyAuthenticated) {
+                // User is already authenticated - handle disconnect/reconnect
+                handleOAuth2Disconnect();
+            } else {
+                // User is not authenticated - start OAuth2 flow
+                startOAuth2Flow();
+            }
+        }
+        
+        // Handle OAuth2 disconnect/reconnect
+        async function handleOAuth2Disconnect() {
+            if (!confirm('Are you sure you want to disconnect your YouTube account? This will remove comment posting access.')) {
+                return;
+            }
+            
+            try {
+                showOAuth2LoadingState(true, 'Disconnecting YouTube account...');
+                
+                const response = await fetch('/api/v1/settings/oauth2', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'disconnect'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatusMessage('✅ YouTube account disconnected successfully! You can now connect a different account.', 'success');
+                    loadSettings(true); // Force refresh to update UI
+                } else {
+                    showStatusMessage(`❌ Failed to disconnect: ${result.error}`, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Disconnect error:', error);
+                showStatusMessage('❌ Failed to disconnect YouTube account.', 'error');
+            } finally {
+                showOAuth2LoadingState(false);
+            }
+        }
+        
+        // Start OAuth2 flow
+        async function startOAuth2Flow() {
+            try {
+                showOAuth2LoadingState(true, 'Generating authorization URL...');
+                
+                const response = await fetch('/api/v1/settings/oauth2', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'generate_url'
+                    })
+                });
+                
+                console.log('OAuth2 response status:', response.status);
+                console.log('OAuth2 response ok:', response.ok);
+                
+                const result = await response.json();
+                console.log('OAuth2 response data:', result);
+                
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to generate OAuth2 URL');
+                }
+                
+                // Open OAuth2 popup
+                const popup = window.open(result.authorization_url, 'oauth2', 'width=500,height=600');
+                
+                if (!popup) {
+                    throw new Error('Popup blocked. Please allow popups for this site.');
+                }
+                
+                showOAuth2LoadingState(true, 'Complete authorization in popup window...');
+                startOAuth2Monitoring(popup);
+                
+            } catch (error) {
+                console.error('OAuth2 flow error:', error);
+                showStatusMessage(`❌ ${error.message}`, 'error');
+                showOAuth2LoadingState(false);
+            }
+        }
+        
+        // Monitor OAuth2 popup and process results
+        function startOAuth2Monitoring(popup) {
+            let messageReceived = false;
+            let localStorageInterval = null;
+            
+            // Listen for post messages from popup
+            const messageHandler = (event) => {
+                if (event.origin !== window.location.origin) return;
+                
+                if (event.data.type === 'oauth2_complete') {
+                    messageReceived = true;
+                    clearInterval(localStorageInterval);
+                    window.removeEventListener('message', messageHandler);
+                    
+                    popup.close();
+                    processOAuth2Result(event.data);
+                }
+            };
+            
+            window.addEventListener('message', messageHandler);
+            
+            // Enhanced OAuth2 status checking with reduced frequency
+            // oauth2StatusCheckInterval already declared globally above
+            oauth2StatusCheckInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('/api/v1/settings');
+                    if (response.ok) {
+                        const settings = await response.json();
+                        
+                        // If OAuth2 is now authenticated, update the UI immediately
+                        if (settings.oauth2_status.authenticated) {
+                            clearInterval(oauth2StatusCheckInterval);
+                            oauth2StatusCheckInterval = null;
+                            
+                            // Hide loading state immediately
+                            showOAuth2LoadingState(false);
+                            
+                            // Update status with success message
+                            showStatusMessage('✅ YouTube account connected successfully!', 'success');
+                            
+                            // Update UI
+                            loadSettings(true);
+                            
+                            // Close popup if still open
+                            if (popup && !popup.closed) {
+                                popup.close();
+                            }
+                            
+                            messageReceived = true;
+                            clearInterval(localStorageInterval);
+                            window.removeEventListener('message', messageHandler);
+                        }
+                    }
+                } catch (error) {
+                    console.log('OAuth2 status check failed:', error);
+                }
+            }, 5000); // Check every 5 seconds instead of 3
+            
+            // Fallback: Check localStorage for OAuth2 results with reduced frequency
+            localStorageInterval = setInterval(() => {
+                try {
+                    const storedResult = localStorage.getItem('oauth2_result');
+                    if (storedResult) {
+                        const result = JSON.parse(storedResult);
+                        const resultAge = Date.now() - result.timestamp;
+                        
+                        // Only process recent results (less than 5 minutes old)
+                        if (resultAge < 300000 && result.type === 'oauth2_complete') {
+                            messageReceived = true;
+                            clearTimeout(fallbackTimeout);
+                            clearInterval(localStorageInterval);
+                            clearInterval(oauth2StatusCheckInterval);
+                            oauth2StatusCheckInterval = null;
+                            
+                            // Clean up localStorage
+                            localStorage.removeItem('oauth2_result');
+                            
+                            popup.close();
+                            processOAuth2Result(result);
+                        }
+                    }
+                } catch (error) {
+                    console.log('localStorage check failed:', error);
+                }
+            }, 3000); // Check every 3 seconds
+            
+            // Timeout fallback (60 seconds)
+            const fallbackTimeout = setTimeout(() => {
+                if (!messageReceived) {
+                    clearInterval(oauth2StatusCheckInterval);
+                    oauth2StatusCheckInterval = null;
+                    clearInterval(localStorageInterval);
+                    window.removeEventListener('message', messageHandler);
+                    
+                    if (popup && !popup.closed) {
+                        popup.close();
+                    }
+                    
+                    showOAuth2LoadingState(false);
+                    showStatusMessage('⏰ OAuth2 timeout. Please try again.', 'warning');
+                }
+            }, 60000);
+        }
+        
+        // Process OAuth2 completion result
+        function processOAuth2Result(data) {
+            console.log('Processing OAuth2 result:', data);
+            
+            if (data.success) {
+                showStatusMessage('✅ YouTube account connected successfully!', 'success');
+                loadSettings(true); // Force refresh
+            } else {
+                showStatusMessage(`❌ OAuth2 failed: ${data.error}`, 'error');
+            }
+            
+            showOAuth2LoadingState(false);
+        }
+        
+        // Show/hide OAuth2 loading state
+        function showOAuth2LoadingState(show, message = 'Processing...') {
+            const loadingIndicator = document.getElementById('oauth2LoadingIndicator');
+            const actionButton = document.getElementById('oauth2ActionButton');
+            const loadingText = document.getElementById('oauth2LoadingText');
+            
+            if (show) {
+                loadingIndicator.classList.remove('hidden');
+                actionButton.classList.add('hidden');
+                if (loadingText) loadingText.textContent = message;
+            } else {
+                loadingIndicator.classList.add('hidden');
+                actionButton.classList.remove('hidden');
+            }
+        }
+        
+        // Update OAuth2 status details
+        function updateOAuth2StatusDetails(isAuthenticated) {
+            const statusCard = document.getElementById('oauth2StatusCard');
+            const statusIcon = document.getElementById('oauth2StatusIcon');
+            const statusTitle = document.getElementById('oauth2StatusTitle');
+            const statusDescription = document.getElementById('oauth2StatusDescription');
+            const benefits = document.getElementById('oauth2Benefits');
+            const actionButton = document.getElementById('oauth2ActionButton');
+            const actionText = document.getElementById('oauth2ActionText');
+            const actionIcon = document.getElementById('oauth2ActionIcon');
+            const statusBadge = document.getElementById('oauth2StatusBadge');
+            
+            if (isAuthenticated) {
+                // Authenticated state
+                statusCard.className = 'p-4 rounded-lg border border-green-500/50 bg-green-500/10';
+                statusIcon.className = 'w-10 h-10 rounded-full flex items-center justify-center bg-green-500';
+                statusIcon.innerHTML = `
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                `;
+                statusTitle.textContent = 'YouTube Connected';
+                statusTitle.className = 'font-semibold text-base mb-1 text-green-400';
+                statusDescription.textContent = 'Your account is authenticated and ready to post comments';
+                benefits.classList.remove('hidden');
+                
+                // Update action button for disconnect
+                actionButton.className = 'w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors text-sm flex items-center justify-center';
+                actionText.textContent = 'Disconnect YouTube Account';
+                actionIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path>
+                `;
+                
+                // Update status badge
+                statusBadge.className = 'flex items-center space-x-2 px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30';
+                statusBadge.innerHTML = `
+                    <span class="w-2 h-2 rounded-full bg-green-400"></span>
+                    <span>Connected</span>
+                `;
+                
+            } else {
+                // Not authenticated state
+                statusCard.className = 'p-4 rounded-lg border border-gray-600/50 bg-gray-700/20';
+                statusIcon.className = 'w-10 h-10 rounded-full flex items-center justify-center bg-gray-600';
+                statusIcon.innerHTML = `
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                `;
+                statusTitle.textContent = 'YouTube Not Connected';
+                statusTitle.className = 'font-semibold text-base mb-1 text-gray-300';
+                statusDescription.textContent = 'Connect your YouTube account to enable AI comment posting';
+                benefits.classList.add('hidden');
+                
+                // Update action button for connect
+                actionButton.className = 'w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors text-sm flex items-center justify-center';
+                actionText.textContent = 'Connect YouTube Account';
+                actionIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                `;
+                
+                // Update status badge
+                statusBadge.className = 'flex items-center space-x-2 px-2 py-1 rounded-full text-xs font-medium bg-gray-600/20 text-gray-400 border border-gray-600/30';
+                statusBadge.innerHTML = `
+                    <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+                    <span>Not Connected</span>
+                `;
+            }
+        }
+        
+        // Update API Keys
+        async function updateAPIKeys() {
+            try {
+                const apiKeys = {
+                    openrouter_api_key: document.getElementById('openrouterKey').value,
+                    youtube_api_key: document.getElementById('youtubeKey').value,
+                    google_client_id: document.getElementById('googleClientId').value,
+                    google_client_secret: document.getElementById('googleClientSecret').value
+                };
+                
+                const response = await fetch('/api/v1/update_env', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(apiKeys)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatusMessage('✅ API Keys updated successfully!', 'success');
+                    loadSettings(true); // Force refresh
+                } else {
+                    showStatusMessage(`❌ Failed to update API keys: ${result.error}`, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Update API keys error:', error);
+                showStatusMessage('❌ Failed to update API keys.', 'error');
+            }
+        }
+        
+        // Update Telegram Settings
+        async function updateTelegramSettings() {
+            try {
+                const telegramSettings = {
+                    telegram_bot_token: document.getElementById('telegramToken').value,
+                    telegram_allowed_user_ids: document.getElementById('allowedUserIds').value
+                };
+                
+                const response = await fetch('/api/v1/update_env', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(telegramSettings)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatusMessage('✅ Telegram settings updated successfully!', 'success');
+                    loadSettings(true); // Force refresh
+                } else {
+                    showStatusMessage(`❌ Failed to update Telegram settings: ${result.error}`, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Update Telegram settings error:', error);
+                showStatusMessage('❌ Failed to update Telegram settings.', 'error');
+            }
+        }
+        
+        // Enhanced status indicator update
+        function updateEnhancedStatusIndicator(elementId, state) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            let statusHtml = '';
+            let statusClass = '';
+            
+            switch (state.status) {
+                case 'valid':
+                    statusHtml = `<span class="status-indicator status-valid"></span>Valid`;
+                    statusClass = 'text-green-400';
+                    break;
+                case 'placeholder':
+                    statusHtml = `<span class="status-indicator status-placeholder"></span>Placeholder`;
+                    statusClass = 'text-yellow-400';
+                    break;
+                case 'invalid':
+                    statusHtml = `<span class="status-indicator status-invalid"></span>Invalid`;
+                    statusClass = 'text-red-400';
+                    break;
+                case 'empty':
+                default:
+                    statusHtml = `<span class="status-indicator status-empty"></span>Not Set`;
+                    statusClass = 'text-gray-400';
+                    break;
+            }
+            
+            element.innerHTML = statusHtml;
+            element.className = `text-xs ${statusClass}`;
+        }
+        
+        // Show status message
+        function showStatusMessage(message, type = 'info') {
+            const statusDiv = document.getElementById('statusMessage');
+            const alertClasses = {
+                success: 'bg-green-900/50 border-green-700 text-green-100',
+                error: 'bg-red-900/50 border-red-700 text-red-100',
+                warning: 'bg-yellow-900/50 border-yellow-700 text-yellow-100',
+                info: 'bg-blue-900/50 border-blue-700 text-blue-100'
+            };
+            
+            statusDiv.innerHTML = `
+                <div class="border rounded-lg p-4 ${alertClasses[type]}">
+                    ${message}
+                </div>
+            `;
+            statusDiv.classList.remove('hidden');
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusDiv.classList.add('hidden');
+            }, 5000);
+        }
+        
+        // Toggle functions for collapsible sections
+        function toggleApiKeysSection() {
+            const content = document.getElementById('apiKeysContent');
+            const toggle = document.getElementById('apiKeysToggle');
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                toggle.classList.add('rotate-180');
+            } else {
+                content.style.display = 'none';
+                toggle.classList.remove('rotate-180');
+            }
+        }
+        
+        function toggleTelegramSection() {
+            const content = document.getElementById('telegramContent');
+            const toggle = document.getElementById('telegramToggle');
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                toggle.classList.add('rotate-180');
+            } else {
+                content.style.display = 'none';
+                toggle.classList.remove('rotate-180');
+            }
+        }
+        
+        function toggleOAuthSection() {
+            const content = document.getElementById('oauthContent');
+            const toggle = document.getElementById('oauthToggle');
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                toggle.classList.add('rotate-180');
+            } else {
+                content.style.display = 'none';
+                toggle.classList.remove('rotate-180');
+            }
+        }
+        
+        // Actions menu functions
+        function toggleActionsMenu() {
+            const menu = document.getElementById('actionsMenu');
+            menu.classList.toggle('menu-show');
+        }
+        
+        function closeActionsMenu() {
+            const menu = document.getElementById('actionsMenu');
+            menu.classList.remove('menu-show');
+        }
+        
+        // Refresh settings
+        function refreshSettings() {
+            loadSettings(true); // Force refresh
+            showStatusMessage('🔄 Settings refreshed!', 'info');
+        }
+        
+        // Copy redirect URI
+        function copyRedirectURI() {
+            const redirectUri = document.getElementById('redirectUriDisplay').textContent;
+            navigator.clipboard.writeText(redirectUri).then(() => {
+                showStatusMessage('📋 Redirect URI copied to clipboard!', 'success');
+            });
+        }
+        
+        // Password visibility toggle
+        function togglePasswordVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            const eye = document.getElementById(inputId + 'Eye');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                eye.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
+                `;
+            } else {
+                input.type = 'password';
+                eye.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                `;
+            }
+        }
+        
+        // Validation functions
+        function validateTelegramToken() {
+            const token = document.getElementById('telegramToken').value;
+            const validation = document.getElementById('telegramTokenValidation');
+            
+            if (!token) {
+                validation.classList.add('hidden');
+                return;
+            }
+            
+            // Basic Telegram bot token validation
+            const tokenPattern = /^\d+:[A-Za-z0-9_-]{35}$/;
+            
+            if (tokenPattern.test(token)) {
+                validation.className = 'flex items-center text-xs text-green-400 mt-1';
+                validation.innerHTML = `
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Valid token format
+                `;
+            } else {
+                validation.className = 'flex items-center text-xs text-red-400 mt-1';
+                validation.innerHTML = `
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Invalid token format
+                `;
+            }
+        }
+        
+        function validateUserIds() {
+            const userIds = document.getElementById('allowedUserIds').value;
+            const validation = document.getElementById('userIdsValidation');
+            
+            if (!userIds) {
+                validation.classList.add('hidden');
+                return;
+            }
+            
+            // Validate comma-separated user IDs
+            const ids = userIds.split(',').map(id => id.trim()).filter(id => id);
+            const validIds = ids.filter(id => /^\d+$/.test(id));
+            
+            if (validIds.length === ids.length && ids.length > 0) {
+                validation.className = 'flex items-center text-xs text-green-400 mt-1';
+                validation.innerHTML = `
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    ${validIds.length} valid user ID${validIds.length > 1 ? 's' : ''}
+                `;
+            } else {
+                validation.className = 'flex items-center text-xs text-red-400 mt-1';
+                validation.innerHTML = `
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Invalid user ID format
+                `;
+            }
+        }
+        
+        // API help functions
+        function showApiHelp(service) {
+            let helpText = '';
+            let helpTitle = '';
+            
+            switch (service) {
+                case 'openrouter':
+                    helpTitle = 'OpenRouter API Key';
+                    helpText = 'Get your API key from OpenRouter.ai. This is used for AI comment generation.';
+                    break;
+                case 'youtube':
+                    helpTitle = 'YouTube Data API Key';
+                    helpText = 'Create a project in Google Cloud Console, enable YouTube Data API v3, and create credentials.';
+                    break;
+                case 'oauth2':
+                    helpTitle = 'Google OAuth2 Credentials';
+                    helpText = 'Create OAuth2 credentials in Google Cloud Console for comment posting functionality.';
+                    break;
+                case 'telegram':
+                    helpTitle = 'Telegram Bot Token';
+                    helpText = 'Create a bot using @BotFather on Telegram and copy the bot token.';
+                    break;
+                case 'telegram_users':
+                    helpTitle = 'Telegram User IDs';
+                    helpText = 'Add your Telegram user ID (get it from @userinfobot). Separate multiple IDs with commas.';
+                    break;
+            }
+            
+            showStatusMessage(`<strong>${helpTitle}:</strong> ${helpText}`, 'info');
+        }
+        
+        // Close actions menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('actionsMenu');
+            const button = document.getElementById('actionsMenuBtn');
+            
+            if (menu && !menu.contains(event.target) && !button.contains(event.target)) {
+                closeActionsMenu();
+            }
+        });
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initWebSocket();
+            loadSettings();
+        });
+        
+        // Fix for updating UI with settings - using correct element IDs
+        function updateUIWithSettingsFix(settings) {
+            if (!settings) return;
+            
+            console.log('🔧 Fixing UI update with settings:', settings);
+            
+            // Helper function to create masked value for display
+            function maskApiKey(key, prefix = '', visibleChars = 4) {
+                if (!key || key.length < visibleChars) return '';
+                return prefix + key.substring(0, visibleChars) + '****';
+            }
+            
+            // Helper function to update status display with correct styling
+            function updateStatus(elementId, isValid, label = 'Valid') {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    if (isValid) {
+                        element.innerHTML = `<span class="text-green-400">✅ ${label}</span>`;
+                        element.className = 'text-xs text-green-400';
+                    } else {
+                        element.innerHTML = `<span class="text-gray-400">Not Set</span>`;
+                        element.className = 'text-xs text-gray-400';
+                    }
+                }
+            }
+            
+            // Update API Keys section
+            if (settings.api_keys && settings.token_validation_states) {
+                // OpenRouter API Key
+                const openrouterInput = document.getElementById('openrouterKey');
+                const openrouterValid = settings.token_validation_states.openrouter_api_key === 'valid';
+                if (openrouterInput && openrouterValid) {
+                    openrouterInput.placeholder = 'Currently configured (sk-or-****)';
+                }
+                updateStatus('openrouterStatus', openrouterValid);
+                
+                // YouTube API Key  
+                const youtubeInput = document.getElementById('youtubeKey');
+                const youtubeValid = settings.token_validation_states.youtube_api_key === 'valid';
+                if (youtubeInput && youtubeValid) {
+                    youtubeInput.placeholder = 'Currently configured (AIza****)';
+                }
+                updateStatus('youtubeStatus', youtubeValid);
+                
+                // Google OAuth2 Credentials
+                const clientIdInput = document.getElementById('googleClientId');
+                const clientSecretInput = document.getElementById('googleClientSecret');
+                const clientIdValid = settings.token_validation_states.google_client_id === 'valid';
+                const clientSecretValid = settings.token_validation_states.google_client_secret === 'valid';
+                const oauthValid = clientIdValid && clientSecretValid;
+                
+                if (clientIdInput && clientIdValid) {
+                    clientIdInput.placeholder = 'Currently configured (Client ID)';
+                }
+                if (clientSecretInput && clientSecretValid) {
+                    clientSecretInput.placeholder = 'Currently configured (Client Secret)';
+                }
+                updateStatus('oauthStatus', oauthValid, 'Configured');
+            }
+            
+            // Update Telegram section
+            if (settings.telegram_settings && settings.token_validation_states) {
+                const telegramTokenInput = document.getElementById('telegramToken');
+                const allowedUsersInput = document.getElementById('allowedUserIds');
+                const tokenValid = settings.token_validation_states.telegram_token === 'valid';
+                const usersValid = settings.telegram_settings.allowed_user_ids && settings.telegram_settings.allowed_user_ids.trim() !== '';
+                
+                if (telegramTokenInput && tokenValid) {
+                    telegramTokenInput.placeholder = 'Currently configured (Bot Token)';
+                }
+                
+                if (allowedUsersInput) {
+                    allowedUsersInput.value = settings.telegram_settings.allowed_user_ids || '';
+                }
+                
+                // Update Telegram status badge
+                const statusBadge = document.getElementById('telegramStatusBadge');
+                const statusDot = document.getElementById('telegramStatusDot');
+                const statusText = document.getElementById('telegramStatusText');
+                
+                if (tokenValid && usersValid) {
+                    if (statusBadge) statusBadge.className = 'flex items-center space-x-2 px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30';
+                    if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-green-400';
+                    if (statusText) statusText.textContent = 'Connected';
+                } else {
+                    if (statusBadge) statusBadge.className = 'flex items-center space-x-2 px-2 py-1 rounded-full text-xs font-medium bg-gray-600/20 text-gray-400 border border-gray-600/30';
+                    if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-gray-400';
+                    if (statusText) statusText.textContent = 'Not Configured';
+                }
+            }
+        }
+        
+        // Override the original updateUIWithSettings function
+        const originalUpdateUIWithSettings = updateUIWithSettings;
+        updateUIWithSettings = function(settings) {
+            // Call original function first
+            originalUpdateUIWithSettings(settings);
+            // Then apply our fix
+            updateUIWithSettingsFix(settings);
+        };
+    </script>
+</body>
+</html>

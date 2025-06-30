@@ -1,0 +1,123 @@
+﻿# ====================================================================
+#  Tiz Lion AI Agent - Docker Compose Configuration
+# ====================================================================
+# Complete development and production setup
+# Updated: 2025-06-30 - Enhanced with health checks and security
+# ====================================================================
+
+version: '3.8'
+
+services:
+  # Main YouTube Comment AI Agent Service
+  youtube-ai-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILD_DATE: 2025-06-30T07:49:16Z
+        VERSION: latest
+    image: tiz20lion/youtube-comment-ai-agent:latest
+    container_name: youtube-ai-agent
+    restart: unless-stopped
+    
+    # Port mapping
+    ports:
+      - "7844:7844"
+    
+    # Environment variables
+    environment:
+      - PORT=7844
+      - HOST=0.0.0.0
+      - PYTHONUNBUFFERED=1
+    
+    # Environment file
+    env_file:
+      - .env
+    
+    # Volume mounts for persistent data
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./temp:/app/temp
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7844/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+    
+    # Logging configuration
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Network
+    networks:
+      - ai-agent-network
+
+# Optional: Redis for caching (uncomment if needed)
+#  redis:
+#    image: redis:7-alpine
+#    container_name: ai-agent-redis
+#    restart: unless-stopped
+#    ports:
+#      - "6379:6379"
+#    volumes:
+#      - redis_data:/data
+#    command: redis-server --appendonly yes
+#    networks:
+#      - ai-agent-network
+
+# Optional: PostgreSQL database (uncomment if needed)
+#  postgres:
+#    image: postgres:15-alpine
+#    container_name: ai-agent-postgres
+#    restart: unless-stopped
+#    environment:
+#      POSTGRES_DB: youtube_ai_agent
+#      POSTGRES_USER: agent_user
+#      POSTGRES_PASSWORD: secure_password_123
+#    ports:
+#      - "5432:5432"
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data
+#    networks:
+#      - ai-agent-network
+
+# Networks
+networks:
+  ai-agent-network:
+    driver: bridge
+    name: ai-agent-network
+
+# Volumes
+volumes:
+  data:
+    name: ai-agent-data
+  logs:
+    name: ai-agent-logs
+  temp:
+    name: ai-agent-temp
+# Uncomment if using optional services
+#  redis_data:
+#    name: ai-agent-redis-data
+#  postgres_data:
+#    name: ai-agent-postgres-data

@@ -1,0 +1,153 @@
+﻿# ====================================================================
+#  Tiz Lion AI Agent - Docker Ignore Configuration
+# ====================================================================
+# Excludes unnecessary files from Docker build context
+# Updated: 2025-06-30 - Optimized for faster builds
+# ====================================================================
+
+# Version Control
+.git
+.gitignore
+.gitattributes
+.github/
+
+# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs and Temporary Files
+*.log
+logs/
+temp/
+tmp/
+.tmp/
+*.tmp
+*.temp
+
+# Environment and Configuration
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.env
+
+# Documentation and Media
+README.md
+*.md
+docs/
+screenshots/
+images/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+docker-build.*
+*.dockerfile
+
+# Deployment Scripts
+deploy-*.sh
+deploy-*.ps1
+deploy-*.bat
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# Node.js (if any)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Application Specific
+oauth2_credentials.json
+token.json
+credentials.json
+private_key.json
+service_account.json
+
+# Backup Files
+*.bak
+*.backup
+*.old
+*~
+
+# Large Files
+*.zip
+*.tar
+*.gz
+*.rar
+*.7z
+
+# Local Development
+local/
+.local/
