@@ -875,7 +875,7 @@
                     google_client_secret: document.getElementById('googleClientSecret').value
                 };
                 
-                const response = await fetch('/api/v1/update_env', {
+                const response = await fetch('/api/v1/settings/api-keys', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -885,11 +885,11 @@
                 
                 const result = await response.json();
                 
-                if (result.success) {
+                if (response.ok) {
                     showStatusMessage('✅ API Keys updated successfully!', 'success');
                     loadSettings(true); // Force refresh
                 } else {
-                    showStatusMessage(`❌ Failed to update API keys: ${result.error}`, 'error');
+                    showStatusMessage(`❌ Failed to update API keys: ${result.detail || result.error || 'Unknown error'}`, 'error');
                 }
                 
             } catch (error) {
@@ -906,7 +906,7 @@
                     telegram_allowed_user_ids: document.getElementById('allowedUserIds').value
                 };
                 
-                const response = await fetch('/api/v1/update_env', {
+                const response = await fetch('/api/v1/settings/telegram', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -916,11 +916,11 @@
                 
                 const result = await response.json();
                 
-                if (result.success) {
+                if (response.ok) {
                     showStatusMessage('✅ Telegram settings updated successfully!', 'success');
                     loadSettings(true); // Force refresh
                 } else {
-                    showStatusMessage(`❌ Failed to update Telegram settings: ${result.error}`, 'error');
+                    showStatusMessage(`❌ Failed to update Telegram settings: ${result.detail || result.error || 'Unknown error'}`, 'error');
                 }
                 
             } catch (error) {
