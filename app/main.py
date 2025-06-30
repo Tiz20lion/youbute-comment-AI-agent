@@ -1702,11 +1702,11 @@ async def get_settings():
         "allowed_user_ids": getattr(settings, 'TELEGRAM_ALLOWED_USERS', '')
     }
     
-    # OAuth2 status
+    # OAuth2 status - use dynamic redirect URI detection
     oauth2_status = {
         "configured": is_valid_credential(google_client_id) and is_valid_credential(google_client_secret),
         "authenticated": check_oauth2_authentication(),
-        "redirect_uri": getattr(settings, 'GOOGLE_OAUTH2_REDIRECT_URI', 'http://localhost:7844/oauth2callback'),
+        "redirect_uri": settings.get_oauth2_redirect_uri(),  # Dynamic detection
         "scopes": getattr(settings, 'GOOGLE_OAUTH2_SCOPES', 'https://www.googleapis.com/auth/youtube.force-ssl').split(',')
     }
     

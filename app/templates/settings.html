@@ -395,7 +395,7 @@
                             <button onclick="copyRedirectURI()" id="copyRedirectButton"
                                     class="text-gray-400 hover:text-gray-200 text-xs transition-colors flex items-center">
                                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                                 </svg>
                                 Copy
                             </button>
@@ -494,34 +494,12 @@
         
         // Separate function to update UI with settings data
         function updateUIWithSettings(settings) {
-            console.log('🔄 Updating UI with settings:', settings);
+            console.log('🎨 Updating UI with settings:', settings);
             
-            if (!settings) {
-                console.warn('No settings data provided to updateUIWithSettings');
-                return;
-            }
+            // Clear any existing error/warning messages
+            clearStatusMessages();
             
-            // Helper function to create masked value for display
-            function maskApiKey(key, prefix = '', visibleChars = 4) {
-                if (!key || key.length < visibleChars) return '';
-                return prefix + key.substring(0, visibleChars) + '****';
-            }
-            
-            // Helper function to update status display
-            function updateStatusDisplay(elementId, isValid) {
-                const element = document.getElementById(elementId);
-                if (element) {
-                    if (isValid) {
-                        element.innerHTML = '<span class="w-2 h-2 bg-green-400 rounded-full inline-block mr-1"></span><span class="text-green-400">✅ Valid</span>';
-                        element.className = 'text-xs text-green-400';
-                    } else {
-                        element.innerHTML = '<span class="w-2 h-2 bg-gray-400 rounded-full inline-block mr-1"></span><span class="text-gray-400">Not Set</span>';
-                        element.className = 'text-xs text-gray-400';
-                    }
-                }
-            }
-            
-            // Update API Keys section with values and status
+            // Update API keys section
             if (settings.api_keys && settings.token_validation_states) {
                 // OpenRouter API Key
                 const openrouterInput = document.getElementById('openrouterKey');
@@ -551,8 +529,9 @@
                     clientIdInput.value = clientIdValid ? maskApiKey(settings.api_keys.google_client_id, '', 8) : '';
                     clientIdInput.placeholder = clientIdValid ? 'Currently configured (Client ID)' : 'Client ID';
                 }
+                
                 if (clientSecretInput) {
-                    clientSecretInput.value = clientSecretValid ? maskApiKey(settings.api_keys.google_client_secret, 'GOCSPX-') : '';
+                    clientSecretInput.value = clientSecretValid ? maskApiKey(settings.api_keys.google_client_secret, '', 8) : '';
                     clientSecretInput.placeholder = clientSecretValid ? 'Currently configured (Client Secret)' : 'Client Secret';
                 }
                 updateStatusDisplay('oauthStatus', clientIdValid && clientSecretValid);
@@ -562,46 +541,30 @@
             if (settings.telegram_settings && settings.token_validation_states) {
                 const telegramTokenInput = document.getElementById('telegramToken');
                 const allowedUsersInput = document.getElementById('allowedUserIds');
-                const tokenValid = settings.token_validation_states.telegram_token === 'valid';
-                const usersValid = settings.telegram_settings.allowed_user_ids && settings.telegram_settings.allowed_user_ids.trim() !== '';
+                const telegramValid = settings.token_validation_states.telegram_token === 'valid';
                 
                 if (telegramTokenInput) {
-                    telegramTokenInput.value = tokenValid ? maskApiKey(settings.telegram_settings.bot_token, '', 10) : '';
-                    telegramTokenInput.placeholder = tokenValid ? 'Currently configured (Bot Token)' : 'Bot token from @BotFather';
+                    telegramTokenInput.value = telegramValid ? maskApiKey(settings.telegram_settings.bot_token, '') : '';
+                    telegramTokenInput.placeholder = telegramValid ? 'Currently configured (Token)' : 'Bot Token';
                 }
                 
                 if (allowedUsersInput) {
                     allowedUsersInput.value = settings.telegram_settings.allowed_user_ids || '';
                 }
-                
-                // Update Telegram status badge
-                const statusBadge = document.getElementById('telegramStatusBadge');
-                const statusDot = document.getElementById('telegramStatusDot');
-                const statusText = document.getElementById('telegramStatusText');
-                
-                if (tokenValid && usersValid) {
-                    if (statusBadge) statusBadge.className = 'flex items-center space-x-2 px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30';
-                    if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-green-400';
-                    if (statusText) statusText.textContent = 'Connected';
-                } else {
-                    if (statusBadge) statusBadge.className = 'flex items-center space-x-2 px-2 py-1 rounded-full text-xs font-medium bg-gray-600/20 text-gray-400 border border-gray-600/30';
-                    if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-gray-400';
-                    if (statusText) statusText.textContent = 'Not Configured';
-                }
+                updateStatusDisplay('telegramStatus', telegramValid);
             }
             
-            // Update OAuth2 status details
+            // Update OAuth2 section with dynamic redirect URI
             if (settings.oauth2_status) {
                 updateOAuth2StatusDetails(settings.oauth2_status.authenticated);
+                
+                // 🆕 Update redirect URI display dynamically
+                const redirectUriDisplay = document.getElementById('redirectUriDisplay');
+                if (redirectUriDisplay && settings.oauth2_status.redirect_uri) {
+                    redirectUriDisplay.textContent = settings.oauth2_status.redirect_uri;
+                    console.log('🔗 Updated redirect URI display:', settings.oauth2_status.redirect_uri);
+                }
             }
-            
-            // Update configuration status if available
-            if (settings.configuration_status) {
-                console.log('📊 Configuration status:', settings.configuration_status);
-            }
-            
-            // Store settings globally for other functions
-            window.lastLoadedSettings = settings;
         }
         
         // Handle OAuth2 action button click - Enhanced with Disconnect/Reconnect Support
@@ -1215,107 +1178,6 @@
             initWebSocket();
             loadSettings();
         });
-        
-        // Fix for updating UI with settings - using correct element IDs
-        function updateUIWithSettingsFix(settings) {
-            if (!settings) return;
-            
-            console.log('🔧 Fixing UI update with settings:', settings);
-            
-            // Helper function to create masked value for display
-            function maskApiKey(key, prefix = '', visibleChars = 4) {
-                if (!key || key.length < visibleChars) return '';
-                return prefix + key.substring(0, visibleChars) + '****';
-            }
-            
-            // Helper function to update status display with correct styling
-            function updateStatus(elementId, isValid, label = 'Valid') {
-                const element = document.getElementById(elementId);
-                if (element) {
-                    if (isValid) {
-                        element.innerHTML = `<span class="text-green-400">✅ ${label}</span>`;
-                        element.className = 'text-xs text-green-400';
-                    } else {
-                        element.innerHTML = `<span class="text-gray-400">Not Set</span>`;
-                        element.className = 'text-xs text-gray-400';
-                    }
-                }
-            }
-            
-            // Update API Keys section
-            if (settings.api_keys && settings.token_validation_states) {
-                // OpenRouter API Key
-                const openrouterInput = document.getElementById('openrouterKey');
-                const openrouterValid = settings.token_validation_states.openrouter_api_key === 'valid';
-                if (openrouterInput && openrouterValid) {
-                    openrouterInput.placeholder = 'Currently configured (sk-or-****)';
-                }
-                updateStatus('openrouterStatus', openrouterValid);
-                
-                // YouTube API Key  
-                const youtubeInput = document.getElementById('youtubeKey');
-                const youtubeValid = settings.token_validation_states.youtube_api_key === 'valid';
-                if (youtubeInput && youtubeValid) {
-                    youtubeInput.placeholder = 'Currently configured (AIza****)';
-                }
-                updateStatus('youtubeStatus', youtubeValid);
-                
-                // Google OAuth2 Credentials
-                const clientIdInput = document.getElementById('googleClientId');
-                const clientSecretInput = document.getElementById('googleClientSecret');
-                const clientIdValid = settings.token_validation_states.google_client_id === 'valid';
-                const clientSecretValid = settings.token_validation_states.google_client_secret === 'valid';
-                const oauthValid = clientIdValid && clientSecretValid;
-                
-                if (clientIdInput && clientIdValid) {
-                    clientIdInput.placeholder = 'Currently configured (Client ID)';
-                }
-                if (clientSecretInput && clientSecretValid) {
-                    clientSecretInput.placeholder = 'Currently configured (Client Secret)';
-                }
-                updateStatus('oauthStatus', oauthValid, 'Configured');
-            }
-            
-            // Update Telegram section
-            if (settings.telegram_settings && settings.token_validation_states) {
-                const telegramTokenInput = document.getElementById('telegramToken');
-                const allowedUsersInput = document.getElementById('allowedUserIds');
-                const tokenValid = settings.token_validation_states.telegram_token === 'valid';
-                const usersValid = settings.telegram_settings.allowed_user_ids && settings.telegram_settings.allowed_user_ids.trim() !== '';
-                
-                if (telegramTokenInput && tokenValid) {
-                    telegramTokenInput.placeholder = 'Currently configured (Bot Token)';
-                }
-                
-                if (allowedUsersInput) {
-                    allowedUsersInput.value = settings.telegram_settings.allowed_user_ids || '';
-                }
-                
-                // Update Telegram status badge
-                const statusBadge = document.getElementById('telegramStatusBadge');
-                const statusDot = document.getElementById('telegramStatusDot');
-                const statusText = document.getElementById('telegramStatusText');
-                
-                if (tokenValid && usersValid) {
-                    if (statusBadge) statusBadge.className = 'flex items-center space-x-2 px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30';
-                    if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-green-400';
-                    if (statusText) statusText.textContent = 'Connected';
-                } else {
-                    if (statusBadge) statusBadge.className = 'flex items-center space-x-2 px-2 py-1 rounded-full text-xs font-medium bg-gray-600/20 text-gray-400 border border-gray-600/30';
-                    if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-gray-400';
-                    if (statusText) statusText.textContent = 'Not Configured';
-                }
-            }
-        }
-        
-        // Override the original updateUIWithSettings function
-        const originalUpdateUIWithSettings = updateUIWithSettings;
-        updateUIWithSettings = function(settings) {
-            // Call original function first
-            originalUpdateUIWithSettings(settings);
-            // Then apply our fix
-            updateUIWithSettingsFix(settings);
-        };
     </script>
 </body>
 </html>

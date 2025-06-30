@@ -4,10 +4,12 @@ Configuration settings for YouTube Comment Automation Bot
 
 import os
 from typing import List, Optional, Dict, Any
+from fastapi import logger
 from pydantic_settings import BaseSettings
 from pydantic import validator, Field
 from pathlib import Path
 import logging
+import requests
 
 
 class Settings(BaseSettings):
@@ -34,8 +36,8 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: Optional[str] = None
     GOOGLE_CLIENT_SECRET: Optional[str] = None
     GOOGLE_OAUTH2_SCOPES: str = "https://www.googleapis.com/auth/youtube.force-ssl"
-    GOOGLE_OAUTH2_REDIRECT_URI: str = Field(
-        default="http://localhost:7844/oauth2callback",
+    GOOGLE_OAUTH2_REDIRECT_URI: Optional[str] = Field(
+        default=None,
         env="GOOGLE_OAUTH2_REDIRECT_URI"
     )
     
@@ -326,14 +328,79 @@ class Settings(BaseSettings):
         """Get max comments directly from .env file."""
         return self.live_max_comments_per_video
     
-    def get_oauth2_redirect_uri(self, host: str = "localhost", port: int = None) -> str:
+    def get_oauth2_redirect_uri(self, host: str = None, port: int = None) -> str:
         """Get OAuth2 redirect URI dynamically based on current host and port"""
+        # If explicitly set in .env file, use that value
         if self.GOOGLE_OAUTH2_REDIRECT_URI:
+            logger.info(f"🔗 Using OAuth2 redirect URI from .env: {self.GOOGLE_OAUTH2_REDIRECT_URI}")
             return self.GOOGLE_OAUTH2_REDIRECT_URI
+        
+        # Auto-detect host if not provided
+        if host is None:
+            host = self._detect_host()
         
         # Use the port from environment, current PORT setting, or default
         actual_port = port or self.PORT or 7844
-        return f"http://{host}:{actual_port}/oauth2callback"
+        dynamic_uri = f"http://{host}:{actual_port}/oauth2callback"
+        
+        logger.info(f"🔗 Auto-generated OAuth2 redirect URI: {dynamic_uri}")
+        return dynamic_uri
+    
+    def _detect_host(self) -> str:
+        """Detect the appropriate host for OAuth2 redirect URI"""
+        import socket
+        import requests
+        
+        # Try to detect if we're running on a VPS/cloud instance
+        try:
+            # Method 1: Check if we can get external IP from metadata services
+            try:
+                # AWS/GCP metadata service
+                response = requests.get('http://169.254.169.254/latest/meta-data/public-ipv4', timeout=2)
+                if response.status_code == 200:
+                    external_ip = response.text.strip()
+                    logger.info(f"🌐 Detected AWS/GCP external IP: {external_ip}")
+                    return external_ip
+            except:
+                pass
+            
+            # Method 2: Try to get external IP from a public service
+            try:
+                response = requests.get('https://api.ipify.org', timeout=5)
+                if response.status_code == 200:
+                    external_ip = response.text.strip()
+                    # Only use external IP if it's not a private IP
+                    if not any(external_ip.startswith(prefix) for prefix in ['10.', '172.', '192.168.', '127.']):
+                        logger.info(f"🌐 Detected external IP: {external_ip}")
+                        return external_ip
+            except:
+                pass
+            
+            # Method 3: Check environment variables commonly set in VPS deployments
+            import os
+            vps_host = os.getenv('VPS_HOST') or os.getenv('SERVER_HOST') or os.getenv('PUBLIC_DOMAIN') or os.getenv('DOMAIN_NAME')
+            if vps_host:
+                logger.info(f"🌐 Using domain from environment: {vps_host}")
+                return vps_host
+            
+            # Method 4: Try to get the machine's hostname if it's not localhost
+            hostname = socket.gethostname()
+            if hostname and hostname != 'localhost' and not hostname.startswith('127.'):
+                # Try to resolve hostname to IP
+                try:
+                    host_ip = socket.gethostbyname(hostname)
+                    if not host_ip.startswith('127.'):
+                        logger.info(f"🌐 Using hostname-resolved IP: {host_ip}")
+                        return host_ip
+                except:
+                    pass
+        
+        except Exception as e:
+            logger.warning(f"Failed to detect host: {e}")
+        
+        # Fallback to localhost for development
+        logger.info("🌐 Fallback to localhost for development")
+        return "localhost"
     
     def check_env_file_status(self) -> dict:
         """Check the status of .env file and key settings"""
