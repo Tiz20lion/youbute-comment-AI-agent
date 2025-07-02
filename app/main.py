@@ -1620,121 +1620,191 @@ async def global_exception_handler(request: Request, exc: Exception):
 @app.get("/api/v1/settings", response_model=SettingsResponse)
 async def get_settings():
     """Get current settings and configuration status."""
-    
-    # Test comment posting capability  
-    can_post = settings.can_post_comments()
-    logger.info(f"🔍 Final comment posting result: {can_post}")
-    
-    def mask_key(key: str) -> str:
-        if not is_valid_credential(key):
-            return "Not configured"
-        if len(key) < 12:
-            return "••••••••"
-        return f"{key[:8]}••••{key[-4:]}"
+    try:
+        # Test comment posting capability  
+        can_post = settings.can_post_comments()
+        logger.info(f"🔍 Final comment posting result: {can_post}")
         
-    # Get current values from settings
-    openrouter_key = getattr(settings, 'OPENROUTER_API_KEY', '')
-    youtube_key = getattr(settings, 'YOUTUBE_API_KEY', '') or getattr(settings, 'GOOGLE_API_KEY', '')
-    google_client_id = getattr(settings, 'GOOGLE_CLIENT_ID', '')
-    google_client_secret = getattr(settings, 'GOOGLE_CLIENT_SECRET', '')
-    telegram_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', '')
-    
-    # Debug logging to track validation results
-    logger.info(f"🔍 Settings validation debug:")
-    logger.info(f"   - OpenRouter key length: {len(openrouter_key)}, valid: {is_valid_credential(openrouter_key)}")
-    logger.info(f"   - YouTube key length: {len(youtube_key)}, valid: {is_valid_credential(youtube_key)}")
-    logger.info(f"   - Google Client ID length: {len(google_client_id)}, valid: {is_valid_credential(google_client_id)}")
-    logger.info(f"   - Google Client Secret length: {len(google_client_secret)}, valid: {is_valid_credential(google_client_secret)}")
-    logger.info(f"   - Telegram token length: {len(telegram_token)}, valid: {is_valid_credential(telegram_token)}")
-    
-    # Special debug for Telegram token
-    if telegram_token:
-        logger.info(f"🔍 Telegram token debug:")
-        logger.info(f"   - First 10 chars: '{telegram_token[:10]}...'")
-        logger.info(f"   - Last 10 chars: '...{telegram_token[-10:]}'")
-        logger.info(f"   - Contains 'bot': {'bot' in telegram_token.lower()}")
-        logger.info(f"   - Contains 'telegram': {'telegram' in telegram_token.lower()}")
-        logger.info(f"   - Typical format (xxxxxxxxx:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx): {':' in telegram_token and len(telegram_token.split(':')) == 2}")
+        def mask_key(key: str) -> str:
+            if not is_valid_credential(key):
+                return "Not configured"
+            if len(key) < 12:
+                return "••••••••"
+            return f"{key[:8]}••••{key[-4:]}"
+            
+        # Get current values from settings with error handling
+        try:
+            openrouter_key = getattr(settings, 'OPENROUTER_API_KEY', '') or ''
+            youtube_key = getattr(settings, 'YOUTUBE_API_KEY', '') or getattr(settings, 'GOOGLE_API_KEY', '') or ''
+            google_client_id = getattr(settings, 'GOOGLE_CLIENT_ID', '') or ''
+            google_client_secret = getattr(settings, 'GOOGLE_CLIENT_SECRET', '') or ''
+            telegram_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', '') or ''
+        except Exception as e:
+            logger.error(f"Error accessing settings attributes: {e}")
+            # Fallback to empty strings
+            openrouter_key = youtube_key = google_client_id = google_client_secret = telegram_token = ''
         
-        # Test validation step by step
-        is_valid_credential(telegram_token)
+        # Debug logging to track validation results
+        logger.info(f"🔍 Settings validation debug:")
+        logger.info(f"   - OpenRouter key length: {len(openrouter_key)}, valid: {is_valid_credential(openrouter_key)}")
+        logger.info(f"   - YouTube key length: {len(youtube_key)}, valid: {is_valid_credential(youtube_key)}")
+        logger.info(f"   - Google Client ID length: {len(google_client_id)}, valid: {is_valid_credential(google_client_id)}")
+        logger.info(f"   - Google Client Secret length: {len(google_client_secret)}, valid: {is_valid_credential(google_client_secret)}")
+        logger.info(f"   - Telegram token length: {len(telegram_token)}, valid: {is_valid_credential(telegram_token)}")
         
-    # API Keys status
-    api_keys = {
-        "openrouter_api_key": mask_key(openrouter_key),
-        "youtube_api_key": mask_key(youtube_key),
-        "google_client_id": mask_key(google_client_id),
-        "google_client_secret": mask_key(google_client_secret)
-    }
-    
-    # Enhanced function to get detailed token validation state
-    def get_token_validation_state(token: str, token_type: str = "generic") -> str:
-        """Get detailed validation state for a token"""
-        if not token or not token.strip():
-            return "empty"
-        
-        # Check for placeholder patterns
-        placeholder_patterns = [
-            'your_telegram_bot_token_here',
-            'your_token',
-            'placeholder',
-            'example',
-            'token_here',
-            'bot_token_here',
-            'enter_your',
-            'your_api_key',
-            'api_key_here'
-        ]
-        
-        token_lower = token.lower().strip()
-        if any(pattern in token_lower for pattern in placeholder_patterns):
-            return "placeholder"
-        
-        # Use existing validation for format check
-        if is_valid_credential(token):
-            return "valid"
-        else:
-            return "invalid"
-    
-    # Telegram settings
-    telegram_settings = {
-        "bot_token": mask_key(telegram_token),
-        "allowed_user_ids": getattr(settings, 'TELEGRAM_ALLOWED_USERS', '')
-    }
-    
-    # OAuth2 status - use dynamic redirect URI detection
-    oauth2_status = {
-        "configured": is_valid_credential(google_client_id) and is_valid_credential(google_client_secret),
-        "authenticated": check_oauth2_authentication(),
-        "redirect_uri": settings.get_oauth2_redirect_uri(),  # Dynamic detection
-        "scopes": getattr(settings, 'GOOGLE_OAUTH2_SCOPES', 'https://www.googleapis.com/auth/youtube.force-ssl').split(',')
-    }
-    
-    # Configuration status - using is_valid_credential to prevent placeholder values showing as configured
-    configuration_status = {
-        "telegram_configured": is_valid_credential(telegram_token),
-        "openrouter_configured": is_valid_credential(openrouter_key),
-        "youtube_api_configured": is_valid_credential(youtube_key),
-        "oauth2_configured": oauth2_status["configured"]
-    }
-    
-    # Log final status for debugging
-    logger.info(f"📊 Configuration status: {configuration_status}")
-        
-    return SettingsResponse(
-        api_keys=api_keys,
-        telegram_settings=telegram_settings,
-        oauth2_status=oauth2_status,
-        configuration_status=configuration_status,
-        # Enhanced: Add detailed token validation states
-        token_validation_states={
-            "openrouter_api_key": get_token_validation_state(openrouter_key),
-            "youtube_api_key": get_token_validation_state(youtube_key),
-            "google_client_id": get_token_validation_state(google_client_id),
-            "google_client_secret": get_token_validation_state(google_client_secret),
-            "telegram_token": get_token_validation_state(telegram_token, "telegram")
+        # Special debug for Telegram token
+        if telegram_token:
+            logger.info(f"🔍 Telegram token debug:")
+            logger.info(f"   - First 10 chars: '{telegram_token[:10]}...'")
+            logger.info(f"   - Last 10 chars: '...{telegram_token[-10:]}'")
+            logger.info(f"   - Contains 'bot': {'bot' in telegram_token.lower()}")
+            logger.info(f"   - Contains 'telegram': {'telegram' in telegram_token.lower()}")
+            logger.info(f"   - Typical format (xxxxxxxxx:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx): {':' in telegram_token and len(telegram_token.split(':')) == 2}")
+            
+            # Test validation step by step
+            is_valid_credential(telegram_token)
+            
+        # API Keys status
+        api_keys = {
+            "openrouter_api_key": mask_key(openrouter_key),
+            "youtube_api_key": mask_key(youtube_key),
+            "google_client_id": mask_key(google_client_id),
+            "google_client_secret": mask_key(google_client_secret)
         }
-    )
+        
+        # Enhanced function to get detailed token validation state
+        def get_token_validation_state(token: str, token_type: str = "generic") -> str:
+            """Get detailed validation state for a token"""
+            try:
+                if not token or not token.strip():
+                    return "empty"
+                
+                # Check for placeholder patterns
+                placeholder_patterns = [
+                    'your_telegram_bot_token_here',
+                    'your_token',
+                    'placeholder',
+                    'example',
+                    'token_here',
+                    'bot_token_here',
+                    'enter_your',
+                    'your_api_key',
+                    'api_key_here'
+                ]
+                
+                token_lower = token.lower().strip()
+                if any(pattern in token_lower for pattern in placeholder_patterns):
+                    return "placeholder"
+                
+                # Use existing validation for format check
+                if is_valid_credential(token):
+                    return "valid"
+                else:
+                    return "invalid"
+            except Exception as e:
+                logger.error(f"Error validating token: {e}")
+                return "invalid"
+        
+        # Telegram settings
+        try:
+            telegram_allowed_users = getattr(settings, 'TELEGRAM_ALLOWED_USERS', '') or ''
+        except Exception:
+            telegram_allowed_users = ''
+            
+        telegram_settings = {
+            "bot_token": mask_key(telegram_token),
+            "allowed_user_ids": telegram_allowed_users
+        }
+        
+        # OAuth2 status - use dynamic redirect URI detection with error handling
+        try:
+            oauth2_authenticated = check_oauth2_authentication()
+        except Exception as e:
+            logger.warning(f"Error checking OAuth2 authentication: {e}")
+            oauth2_authenticated = False
+        
+        try:
+            redirect_uri = settings.get_oauth2_redirect_uri()
+        except Exception as e:
+            logger.warning(f"Error getting OAuth2 redirect URI: {e}")
+            redirect_uri = "http://localhost:7844/oauth2callback"  # Fallback
+        
+        try:
+            oauth2_scopes = getattr(settings, 'GOOGLE_OAUTH2_SCOPES', 'https://www.googleapis.com/auth/youtube.force-ssl')
+            if oauth2_scopes:
+                scopes_list = oauth2_scopes.split(',')
+            else:
+                scopes_list = ['https://www.googleapis.com/auth/youtube.force-ssl']
+        except Exception:
+            scopes_list = ['https://www.googleapis.com/auth/youtube.force-ssl']
+        
+        oauth2_status = {
+            "configured": is_valid_credential(google_client_id) and is_valid_credential(google_client_secret),
+            "authenticated": oauth2_authenticated,
+            "redirect_uri": redirect_uri,
+            "scopes": scopes_list
+        }
+        
+        # Configuration status - using is_valid_credential to prevent placeholder values showing as configured
+        configuration_status = {
+            "telegram_configured": is_valid_credential(telegram_token),
+            "openrouter_configured": is_valid_credential(openrouter_key),
+            "youtube_api_configured": is_valid_credential(youtube_key),
+            "oauth2_configured": oauth2_status["configured"]
+        }
+        
+        # Log final status for debugging
+        logger.info(f"📊 Configuration status: {configuration_status}")
+            
+        return SettingsResponse(
+            api_keys=api_keys,
+            telegram_settings=telegram_settings,
+            oauth2_status=oauth2_status,
+            configuration_status=configuration_status,
+            # Enhanced: Add detailed token validation states
+            token_validation_states={
+                "openrouter_api_key": get_token_validation_state(openrouter_key),
+                "youtube_api_key": get_token_validation_state(youtube_key),
+                "google_client_id": get_token_validation_state(google_client_id),
+                "google_client_secret": get_token_validation_state(google_client_secret),
+                "telegram_token": get_token_validation_state(telegram_token, "telegram")
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in get_settings endpoint: {e}")
+        # Return a safe fallback response
+        return SettingsResponse(
+            api_keys={
+                "openrouter_api_key": "Error loading",
+                "youtube_api_key": "Error loading",
+                "google_client_id": "Error loading",
+                "google_client_secret": "Error loading"
+            },
+            telegram_settings={
+                "bot_token": "Error loading",
+                "allowed_user_ids": ""
+            },
+            oauth2_status={
+                "configured": False,
+                "authenticated": False,
+                "redirect_uri": "http://localhost:7844/oauth2callback",
+                "scopes": ["https://www.googleapis.com/auth/youtube.force-ssl"]
+            },
+            configuration_status={
+                "telegram_configured": False,
+                "openrouter_configured": False,
+                "youtube_api_configured": False,
+                "oauth2_configured": False
+            },
+            token_validation_states={
+                "openrouter_api_key": "error",
+                "youtube_api_key": "error",
+                "google_client_id": "error",
+                "google_client_secret": "error",
+                "telegram_token": "error"
+            }
+        )
 
 @app.post("/api/v1/settings/api-keys")
 async def update_api_keys(config: APIKeysUpdate):

@@ -4,12 +4,14 @@ Configuration settings for YouTube Comment Automation Bot
 
 import os
 from typing import List, Optional, Dict, Any
-from fastapi import logger
 from pydantic_settings import BaseSettings
 from pydantic import validator, Field
 from pathlib import Path
 import logging
 import requests
+
+# Create logger for this module
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):

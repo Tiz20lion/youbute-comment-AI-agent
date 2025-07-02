@@ -454,6 +454,26 @@
             cacheTimeout: 30000, // 30 seconds cache
         };
         
+        // Utility function to mask API keys for display
+        function maskApiKey(apiKey, prefix = '', showChars = 4) {
+            if (!apiKey) return '';
+            
+            // If prefix is provided, show prefix + asterisks + last few chars
+            if (prefix) {
+                return prefix + '*'.repeat(Math.max(0, apiKey.length - prefix.length - showChars)) + apiKey.slice(-showChars);
+            }
+            
+            // If no prefix, show first few chars + asterisks + last few chars
+            const firstChars = Math.max(1, showChars);
+            const lastChars = Math.max(1, showChars);
+            
+            if (apiKey.length <= firstChars + lastChars) {
+                return '*'.repeat(apiKey.length);
+            }
+            
+            return apiKey.slice(0, firstChars) + '*'.repeat(Math.max(0, apiKey.length - firstChars - lastChars)) + apiKey.slice(-lastChars);
+        }
+        
         // Enhanced Load Settings with Caching and Reduced Polling
         async function loadSettings(forceRefresh = false) {
             try {
@@ -489,6 +509,15 @@
             } catch (error) {
                 console.error('Error loading settings:', error);
                 showStatusMessage('❌ Failed to load settings. Please try refreshing the page.', 'error');
+            }
+        }
+        
+        // Clear any existing error/warning messages
+        function clearStatusMessages() {
+            const statusDiv = document.getElementById('statusMessage');
+            if (statusDiv) {
+                statusDiv.classList.add('hidden');
+                statusDiv.innerHTML = '';
             }
         }
         
@@ -551,7 +580,7 @@
                 if (allowedUsersInput) {
                     allowedUsersInput.value = settings.telegram_settings.allowed_user_ids || '';
                 }
-                updateStatusDisplay('telegramStatus', telegramValid);
+                updateTelegramStatusDisplay(telegramValid);
             }
             
             // Update OAuth2 section with dynamic redirect URI
@@ -929,6 +958,57 @@
             }
         }
         
+        // Simple status display function (used by updateUIWithSettings)
+        function updateStatusDisplay(elementId, isValid) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            let statusHtml = '';
+            let statusClass = '';
+            
+            if (isValid) {
+                statusHtml = `<span class="w-2 h-2 bg-green-400 rounded-full inline-block mr-1"></span>Valid`;
+                statusClass = 'text-green-400';
+            } else {
+                statusHtml = `<span class="w-2 h-2 bg-red-400 rounded-full inline-block mr-1"></span>Not Set`;
+                statusClass = 'text-red-400';
+            }
+            
+            element.innerHTML = statusHtml;
+            element.className = `text-xs ${statusClass}`;
+        }
+
+        // Specific function for updating Telegram status display
+        function updateTelegramStatusDisplay(isValid) {
+            const statusBadge = document.getElementById('telegramStatusBadge');
+            const statusText = document.getElementById('telegramStatusText');
+            const statusDot = document.getElementById('telegramStatusDot');
+            
+            if (isValid) {
+                // Configured state
+                if (statusBadge) {
+                    statusBadge.className = 'flex items-center space-x-2 px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Configured';
+                }
+                if (statusDot) {
+                    statusDot.className = 'w-2 h-2 rounded-full bg-green-400';
+                }
+            } else {
+                // Not configured state
+                if (statusBadge) {
+                    statusBadge.className = 'flex items-center space-x-2 px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400';
+                }
+                if (statusText) {
+                    statusText.textContent = 'Not Configured';
+                }
+                if (statusDot) {
+                    statusDot.className = 'w-2 h-2 rounded-full bg-red-400';
+                }
+            }
+        }
+
         // Enhanced status indicator update
         function updateEnhancedStatusIndicator(elementId, state) {
             const element = document.getElementById(elementId);
